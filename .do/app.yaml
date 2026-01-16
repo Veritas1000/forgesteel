@@ -1,0 +1,30 @@
+name: forgesteel-app
+
+alerts:
+- rule: DEPLOYMENT_FAILED
+- rule: DOMAIN_FAILED
+
+domains:
+- domain: hulahut.xyz
+  type: PRIMARY
+
+services:
+- name: forgesteel
+  image:
+    registry: veritas1000
+    registry_type: GHCR
+    repository: forgesteel
+    tag: dev-test 
+  envs:
+  - key: FORGESTEEL_PATREON_TOKEN_HANDLER_HOST
+    scope: RUN_AND_BUILD_TIME
+    value: https://warehouse.hulahut.xyz
+  health_check:
+    failure_threshold: 9
+    http_path: /healthz
+    period_seconds: 10
+    success_threshold: 1
+    timeout_seconds: 1
+  http_port: 80
+  instance_size_slug: apps-s-1vcpu-0.5gb
+  instance_count: 1
