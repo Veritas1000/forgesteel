@@ -379,6 +379,7 @@ export const HeroSheetPage = (props: Props) => {
 							character={character}
 						/>
 					</div>
+					{addAbilityPages(character, extraCards)}
 					<hr className='dashed' />
 					<div className={`page page-2 ${options.pageOrientation}`} id={SheetFormatter.getPageId('hero-sheet', hero.id, '2')}>
 						<CultureCard
@@ -402,7 +403,6 @@ export const HeroSheetPage = (props: Props) => {
 							character={character}
 						/>
 					</div>
-					{addAbilityPages(character, extraCards)}
 					<hr className='dashed' />
 					<div className={`page page-titles-inventory-projects ${options.pageOrientation}`} id={SheetFormatter.getPageId('hero-sheet', hero.id, 'titles-inv-proj')}>
 						<TitlesCard
