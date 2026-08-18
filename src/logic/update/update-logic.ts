@@ -736,7 +736,7 @@ ${encounter.objective.victories}`
 		}
 
 		if (options.featuresInclude === undefined) {
-			options.featuresInclude = 'all';
+			options.featuresInclude = 'minimal';
 		}
 
 		if (options.classicSheetPageSize === undefined) {

@@ -1079,7 +1079,7 @@ export class FactoryLogic {
 			colorScheme: 'community',
 			showPowerRollCalculation: true,
 			sheetTextColor: 'default',
-			featuresInclude: 'all',
+			featuresInclude: 'minimal',
 			pageOrientation: 'portrait',
 			debugClassicSheet: false,
 			// Monster Builder
