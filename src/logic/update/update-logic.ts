@@ -723,6 +723,10 @@ ${encounter.objective.victories}`
 			options.colorSheet = true;
 		}
 
+		if (options.fillStyle === undefined) {
+			options.fillStyle = 'rules';
+		}
+
 		if (options.colorScheme === undefined) {
 			options.colorScheme = 'community';
 		}

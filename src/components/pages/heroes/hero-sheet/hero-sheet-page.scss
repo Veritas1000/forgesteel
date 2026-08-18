@@ -213,4 +213,18 @@
             grid-column-end: span 2;
         }
     }
+
+    &.fill-blank:not(#priority) .abilities {
+        .card {
+            align-self: flex-start;
+        }
+
+        .stacked-cards {
+            justify-content: flex-start;
+
+            .card {
+                flex: 0;
+            }
+        }
+    }
 }

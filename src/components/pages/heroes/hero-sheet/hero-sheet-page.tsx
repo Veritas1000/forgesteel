@@ -1,6 +1,6 @@
 import { CarryThreeSafelyReference, EdgesBanesReferenceCard, FallingReferenceCard, MainActionsReferenceCard, ManeuversReferenceCard, MarkdownReferenceCard, MoveActionsReferenceCard, MovementReferenceCard, RulesReferenceCard } from '@/components/panels/classic-sheet/reference/reference-cards';
 import { ConsumablesCard, LeveledTreasureCard, RemainingInventoryCard, TrinketsCard } from '@/components/panels/classic-sheet/inventory-card/inventory-card';
-import { ExtraCards, SheetLayout } from '@/logic/classic-sheet/sheet-layout';
+import { ExtraCards, FillerCard, SheetLayout } from '@/logic/classic-sheet/sheet-layout';
 import { CareerCard } from '@/components/panels/classic-sheet/career-card/career-card';
 import { ClassFeaturesCard } from '@/components/panels/classic-sheet/class-features-card/class-features-card';
 import { CompanionCard } from '@/components/panels/classic-sheet/follower-card/companion-card';
@@ -56,7 +56,8 @@ export const HeroSheetPage = (props: Props) => {
 		() => {
 			const classes = [
 				'hero-sheet',
-				options.classicSheetPageSize.toLowerCase()
+				options.classicSheetPageSize.toLowerCase(),
+				`fill-${options.fillStyle}`
 			];
 			if (options.colorSheet) {
 				classes.push('color');
@@ -64,7 +65,7 @@ export const HeroSheetPage = (props: Props) => {
 			}
 			return classes;
 		},
-		[ options.classicSheetPageSize, options.colorSheet, options.colorScheme ]
+		[ options.classicSheetPageSize, options.colorSheet, options.colorScheme, options.fillStyle ]
 	);
 
 	const layout = useMemo(
@@ -154,74 +155,78 @@ export const HeroSheetPage = (props: Props) => {
 			});
 		}
 
-		const optional = [
-			{
-				element: <EdgesBanesReferenceCard key='edges-banes-reference' />,
-				width: 1,
-				height: 22,
-				shown: false
-			},
-			{
-				element: <MainActionsReferenceCard key='main-actions-reference' />,
-				width: 1,
-				height: 23,
-				shown: false
-			},
-			{
-				element: <ManeuversReferenceCard key='maneuvers-reference' />,
-				width: 1,
-				height: 39,
-				shown: false
-			},
-			{
-				element: <MoveActionsReferenceCard key='move-actions-reference' />,
-				width: 1,
-				height: 14,
-				shown: false
-			},
-			{
-				element: <MovementReferenceCard key='movement-reference' />,
-				width: 1,
-				height: 39,
-				shown: false
-			},
-			{
-				element: <FallingReferenceCard key='falling-reference' />,
-				width: 1,
-				height: 25,
-				shown: false
-			}
-		];
+		let optional: FillerCard[] = [];
 
-		const addlRules = [
-			RulesData.concealment,
-			RulesData.criticalHit,
-			RulesData.climbingAndSwimming,
-			RulesData.jumping,
-			RulesData.cover,
-			RulesData.difficultTerrain,
-			RulesData.dyingAndDeath,
-			RulesData.flanking,
-			RulesData.hiding,
-			RulesData.highGround,
-			RulesData.shifting,
-			RulesData.duringTheMove,
-			RulesData.opportunityAttack,
-			RulesData.invisibility,
-			RulesData.slammingCreatures,
-			RulesData.slammingObjects,
-			RulesData.sneaking,
-			RulesData.rollVsMultipleCreatures
-		];
+		if (options.fillStyle === 'rules') {
+			optional = [
+				{
+					element: <EdgesBanesReferenceCard key='edges-banes-reference' />,
+					width: 1,
+					height: 22,
+					shown: false
+				},
+				{
+					element: <MainActionsReferenceCard key='main-actions-reference' />,
+					width: 1,
+					height: 23,
+					shown: false
+				},
+				{
+					element: <ManeuversReferenceCard key='maneuvers-reference' />,
+					width: 1,
+					height: 39,
+					shown: false
+				},
+				{
+					element: <MoveActionsReferenceCard key='move-actions-reference' />,
+					width: 1,
+					height: 14,
+					shown: false
+				},
+				{
+					element: <MovementReferenceCard key='movement-reference' />,
+					width: 1,
+					height: 39,
+					shown: false
+				},
+				{
+					element: <FallingReferenceCard key='falling-reference' />,
+					width: 1,
+					height: 25,
+					shown: false
+				}
+			];
 
-		addlRules.forEach(rule => {
-			optional.push({
-				element: <RulesReferenceCard key={rule.label.toLocaleLowerCase().split(' ').join('-')} rule={rule} />,
-				width: 1,
-				height: SheetFormatter.calculateRuleReferenceCardSize(rule, layout.cardLineLen),
-				shown: false
+			const addlRules = [
+				RulesData.concealment,
+				RulesData.criticalHit,
+				RulesData.climbingAndSwimming,
+				RulesData.jumping,
+				RulesData.cover,
+				RulesData.difficultTerrain,
+				RulesData.dyingAndDeath,
+				RulesData.flanking,
+				RulesData.hiding,
+				RulesData.highGround,
+				RulesData.shifting,
+				RulesData.duringTheMove,
+				RulesData.opportunityAttack,
+				RulesData.invisibility,
+				RulesData.slammingCreatures,
+				RulesData.slammingObjects,
+				RulesData.sneaking,
+				RulesData.rollVsMultipleCreatures
+			];
+
+			addlRules.forEach(rule => {
+				optional.push({
+					element: <RulesReferenceCard key={rule.label.toLocaleLowerCase().split(' ').join('-')} rule={rule} />,
+					width: 1,
+					height: SheetFormatter.calculateRuleReferenceCardSize(rule, layout.cardLineLen),
+					shown: false
+				});
 			});
-		});
+		}
 
 		return {
 			required: required,

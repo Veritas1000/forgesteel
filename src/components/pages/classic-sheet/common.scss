@@ -395,6 +395,12 @@ main#classic-sheet {
                 flex-basis: 100%;
             }
         }
+        
+        .page:not(#priority) .stacked-cards .card {
+            flex: auto;
+            align-self: stretch;
+        }
+
         &.letter {
             .page.portrait {
                 aspect-ratio: 8.5 / 11;

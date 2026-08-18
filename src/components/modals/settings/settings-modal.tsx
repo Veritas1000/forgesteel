@@ -268,6 +268,13 @@ export const SettingsModal = (props: Props) => {
 			saveOptions(copy);
 		};
 
+		const setFillStyle = (value: 'rules' | 'blank') => {
+			const copy = Utils.copy(options);
+			copy.fillStyle = value;
+			setOptions(copy);
+			saveOptions(copy);
+		};
+
 		return (
 			<Expander title='Heroes - Classic View'>
 				<Space orientation='vertical' style={{ width: '100%' }}>
@@ -298,6 +305,21 @@ export const SettingsModal = (props: Props) => {
 								optionRender={option => <Field label={option.data.label} value={option.data.desc} />}
 								value={options.featuresInclude}
 								onChange={setFeaturesInclude}
+							/>
+						}
+					/>
+					<LabelControl
+						label='Fill Style'
+						control={
+							<Segmented
+								name='filler'
+								block={true}
+								options={[
+									{ value: 'rules', label: 'Rules cards' },
+									{ value: 'blank', label: 'Empty space' }
+								]}
+								value={options.fillStyle}
+								onChange={setFillStyle}
 							/>
 						}
 					/>
