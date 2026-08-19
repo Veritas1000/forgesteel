@@ -13,6 +13,7 @@ import targetIcon from '@/assets/icons/target.svg';
 
 interface Props {
 	ability: AbilitySheet;
+	height?: number;
 }
 
 export const AbilityCard = (props: Props) => {
@@ -155,6 +156,9 @@ export const AbilityCard = (props: Props) => {
 				{getTriggerSection()}
 				{getSections()}
 			</section>
+			<div className='height-debug'>
+				{props.height}
+			</div>
 		</div>
 	);
 };

@@ -20,11 +20,29 @@
 }
 
 @mixin striped-card() {
-    --l1: round(up, calc(1rem + 4px), 1px);
-    --ld: calc(var(--l1) + 1px);
-    --l2: round(up, calc(2 * var(--l1)), 1px);
-    background-image: linear-gradient(180deg, transparent var(--l1), #ccc var(--l1), #ccc var(--ld), #eee var(--ld), #eee var(--l2), #ccc var(--l2));
-    background-size: 100% calc(var(--l2) + 1px);
+    --l1: round(up, calc(1rem + 4px), 1px);    // bottom of line 1
+    --l2: round(up, calc(2 * var(--l1)), 1px); // bottom of line 2
+    --l3: round(up, calc(3 * var(--l1)), 1px); // bottom of line 3
+    --l4: round(up, calc(4 * var(--l1)), 1px); // bottom of line 4
+    --l5: round(up, calc(5 * var(--l1)), 1px); // bottom of line 5
+    --l6: round(up, calc(6 * var(--l1)), 1px); // bottom of line 6
+    --l7: round(up, calc(7 * var(--l1)), 1px); // bottom of line 7
+    --l8: round(up, calc(8 * var(--l1)), 1px); // bottom of line 8
+    --l9: round(up, calc(9 * var(--l1)), 1px); // bottom of line 9
+    --lX: round(up, calc(10 * var(--l1)), 1pX);// bottom of line 10
+    
+    background-image: linear-gradient(180deg,
+        transparent 0 var(--l1),
+        #e9e9e9 var(--l1), #e9e9e9 var(--l2),
+        transparent var(--l2) var(--l3),
+        #e9e9e9 var(--l3), #e9e9e9 var(--l4),
+        transparent var(--l4) var(--l5),
+        #e9e9e9 var(--l5), #e9e9e9 var(--l6),
+        transparent var(--l6) var(--l7),
+        #e9e9e9 var(--l7), #e9e9e9 var(--l8),
+        transparent var(--l8) var(--l9),
+        #e9f5fc var(--l9), #e9f5fc var(--lX));
+    background-size: 100% var(--lX);
     background-position: center top;
     background-repeat: repeat-y;
 }

@@ -239,6 +239,7 @@ export class SheetLayout {
 		let numAbilitiesPlaced = 0;
 		while (numAbilitiesPlaced < allAbilities.length) {
 			// build a single page
+			console.log(`=== Building Ability Page - lines: ${layout.linesY} ========`);
 			const pageStart = numAbilitiesPlaced;
 			let pageH = 0;
 			let rowH = 0;
@@ -247,6 +248,7 @@ export class SheetLayout {
 
 			while (numAbilitiesPlaced < allAbilities.length && pageH < layout.linesY) {
 				// Try to fill a row with ability cards, calculating height
+				console.log(`-- Starting new row at h: ${pageH}, spaceAvailable: ${layout.linesY - pageH}`);
 				const rowStartN = numAbilitiesPlaced;
 				// const rowEnd = Math.min(numAbilitiesPlaced + layout.perRow, allAbilities.length);
 				const rowAbilities = allAbilities.slice(rowStartN);
@@ -265,13 +267,16 @@ export class SheetLayout {
 
 					// Calculate the next ability card height
 					const aH = SheetFormatter.calculateAbilitySize(a, layout.cardLineLen);
+					console.log(' >> Trying to place card', { cardName: a.name, h: aH, slotH: slotH, rowH: rowH });
 					// if we are trying to fill a partial slot, check combined height
 					if (currentSlotCards.length > 0) {
 						// only fill up to current row height (+ a little wiggle room)
 						let canStack = slotH + aH <= (rowH + 2);
+						// canStack && console.log('    > it can stack in the current slot');
 						// -or- if there is not a lot of pageH left, allow going up to that
 						if (layout.linesY - (pageH + rowH) < 20) {
 							canStack = pageH + Math.max(slotH + aH, rowH) <= layout.linesY;
+							// canStack && console.log('    > End of page - allow it to stack in the current slot');
 						}
 						if (canStack) {
 							currentSlotCards.push({ card: a, h: aH });
@@ -280,9 +285,13 @@ export class SheetLayout {
 
 							rowH = Math.max(slotH, rowH);
 
+							console.log(`    >  - slotH now ${slotH}`);
+							console.log(`    >  - rowH now ${rowH}`);
+
 							return true;
 						} else {
 							// Can't stack with previous slot, place *previous* slot
+							console.log('    > it can\'t stack in the current slot');
 							pageAbilityGrid.push(currentSlotCards);
 							rowH = Math.max(rowH, slotH);
 							currentSlotCards = [];
@@ -387,6 +396,7 @@ export class SheetLayout {
 											<AbilityCard
 												key={sa.card.id}
 												ability={sa.card}
+												height={sa.h}
 											/>
 										)}
 									</div>
@@ -396,6 +406,7 @@ export class SheetLayout {
 									<AbilityCard
 										key={a[0].card.id}
 										ability={a[0].card}
+										height={a[0].h}
 									/>
 								);
 							}

@@ -1,10 +1,19 @@
 @use '../../../pages/classic-sheet/common.scss';
 
 #classic-sheet .hero-sheet .ability.card {
-    // @include common.striped-card;
+    @include common.striped-card;
     padding: 10px;
     display:grid;
     justify-self: stretch;
+
+    
+    position: relative;
+    .height-debug {
+        position: absolute;
+        top: -1px;
+        right: 2px;
+        font-size: 10px;
+    }
 
     section.bordered {
         // These are set to *almost* 0 but not 0 because of a weird
