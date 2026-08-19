@@ -888,7 +888,7 @@ export class SheetFormatter {
 			// console.log(`-- Full: ${size}`);
 			// console.log('============================');
 		}
-		return size;
+		return Math.round(size * 100) / 100;
 	};
 
 	static countLines = (text: string | undefined, lineWidth: number, emptyLineSize = 0, lineFactor: number = 1) => {

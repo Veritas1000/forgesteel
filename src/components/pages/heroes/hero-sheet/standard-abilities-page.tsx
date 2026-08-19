@@ -49,7 +49,7 @@ export const StandardAbilitiesPage = (props: Props) => {
 			<main id='classic-sheet'>
 				<div className={sheetClasses.join(' ')} id={props.hero.id}>
 					{
-						SheetLayout.getAbilityPages(abilities, extraCards, layout, p => SheetFormatter.getPageId('hero-sheet', 'standard-abilities', `abilities-${p}`))
+						SheetLayout.getAbilityPagesOld(abilities, extraCards, layout, p => SheetFormatter.getPageId('hero-sheet', 'standard-abilities', `abilities-${p}`))
 					}
 				</div>
 			</main>

@@ -19,7 +19,7 @@
     font-family: 'Draw Steel Glyphs', Arial, Helvetica, sans-serif !important;
 }
 
-@mixin striped-card() {
+@mixin striped-card($evenColor: #e9e9e9, $tenColor: #e9f5fc, $topOffset: 0px) {
     --l1: round(up, calc(1rem + 4px), 1px);    // bottom of line 1
     --l2: round(up, calc(2 * var(--l1)), 1px); // bottom of line 2
     --l3: round(up, calc(3 * var(--l1)), 1px); // bottom of line 3
@@ -33,17 +33,17 @@
     
     background-image: linear-gradient(180deg,
         transparent 0 var(--l1),
-        #e9e9e9 var(--l1), #e9e9e9 var(--l2),
+        $evenColor var(--l1), $evenColor var(--l2),
         transparent var(--l2) var(--l3),
-        #e9e9e9 var(--l3), #e9e9e9 var(--l4),
+        $evenColor var(--l3), $evenColor var(--l4),
         transparent var(--l4) var(--l5),
-        #e9e9e9 var(--l5), #e9e9e9 var(--l6),
+        $evenColor var(--l5), $evenColor var(--l6),
         transparent var(--l6) var(--l7),
-        #e9e9e9 var(--l7), #e9e9e9 var(--l8),
+        $evenColor var(--l7), $evenColor var(--l8),
         transparent var(--l8) var(--l9),
-        #e9f5fc var(--l9), #e9f5fc var(--lX));
+        $tenColor var(--l9), $tenColor var(--lX));
     background-size: 100% var(--lX);
-    background-position: center top;
+    background-position: center $topOffset;
     background-repeat: repeat-y;
 }
 
@@ -331,6 +331,7 @@ main#classic-sheet {
 
         .abilities.page,
         .extra-cards.page {
+            @include striped-card(#cdc, #add, 7px);
             --gap: 10px;
             display: flex;
             flex-wrap: wrap;

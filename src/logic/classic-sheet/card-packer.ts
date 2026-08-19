@@ -16,11 +16,13 @@ export class StackedCell {
 	contents: AbilityCell[];
 	h: number;
 	maxHeight: number;
+	_spacing: number;
 
-	constructor(maxHeight: number) {
+	constructor(maxHeight: number, spacing: number) {
 		this.contents = [];
 		this.h = 0;
 		this.maxHeight = maxHeight;
+		this._spacing = spacing;
 	}
 
 	fits = (card: AbilityCell, altMaxHeight?: number): boolean => {
@@ -32,7 +34,7 @@ export class StackedCell {
 
 	add(cell: AbilityCell) {
 		this.contents.push(cell);
-		this.h += cell.h;
+		this.h += cell.h + (this.contents.length > 1 ? this._spacing : 0);
 	}
 }
 
@@ -42,10 +44,10 @@ export class CellRow {
 	maxHeight: number;
 	h: number;
 
-	constructor(cellsPerRow: number, maxHeight: number) {
+	constructor(cellsPerRow: number, maxHeight: number, spacing: number = 0) {
 		this.stacks = [];
 		for (let i = 0; i < cellsPerRow; i++) {
-			this.stacks.push(new StackedCell(maxHeight));
+			this.stacks.push(new StackedCell(maxHeight, spacing));
 		}
 		this._currentStackIdx = -1;
 		this.h = 0;
@@ -62,7 +64,22 @@ export class CellRow {
 			return true;
 		}
 		// 2. can we stack in a previous slot
-		return this.stacks.some(stack => stack.fits(cell, this.h));
+		return this.stacks
+			.slice(this.getTallestIndex())
+			.some(stack => stack.fits(cell, this.getMaxStackHeight()));
+	};
+
+	getTallestIndex = (): number => {
+		const currentTallestStackIdx = this.stacks.findIndex(stack => {
+			return stack.contents.length === 1
+				&& stack.h === this.h;
+		});
+		return Math.max(0, currentTallestStackIdx);
+	};
+
+	getMaxStackHeight = (): number => {
+		// allow a stack to slightly increase row height
+		return this.h + 2;
 	};
 
 	add = (cell: AbilityCell) => {
@@ -70,8 +87,9 @@ export class CellRow {
 		if (this._currentStackIdx >= 0) {
 			// check if current stack can fit new cell without increasing row height
 			const currentStack = this.stacks[this._currentStackIdx];
-			if (currentStack.fits(cell, this.h)) {
+			if (currentStack.fits(cell, this.getMaxStackHeight())) {
 				currentStack.add(cell);
+				this.h = Math.max(this.h, currentStack.h);
 				return;
 			}
 		}
@@ -79,13 +97,15 @@ export class CellRow {
 		// if the next index is outside the row
 		if (nextIdx >= this.stacks.length) {
 			// see if it can fit in a previous stack
-			const stacked = this.stacks.some(stack => {
-				if (stack.fits(cell, this.h)) {
-					stack.add(cell);
-					return true;
-				}
-				return false;
-			});
+			const stacked = this.stacks.slice(this.getTallestIndex())
+				.some(stack => {
+					if (stack.fits(cell, this.getMaxStackHeight())) {
+						stack.add(cell);
+						this.h = Math.max(this.h, stack.h);
+						return true;
+					}
+					return false;
+				});
 			if (stacked) {
 				return;
 			} else {
@@ -100,55 +120,117 @@ export class CellRow {
 	};
 }
 
-export class CardPage {
+// Stores cards in rows on the page.
+// It will focus on packing cards to maximize space, but only
+// to the point where a given row will only be as tall as the
+// largest single card in that row.
+export class CardRowPage {
 	rows: CellRow[];
-	_currentRow: number;
+	_layout: CardPageLayout;
+	_currentRowIdx: number;
 	h: number;
 	maxHeight: number;
 
-	constructor(cellsPerRow: number, maxHeight: number) {
+	constructor(layout: CardPageLayout) {
+		this._layout = layout;
 		this.rows = [];
-		this.rows.push(new CellRow(cellsPerRow, maxHeight));
-		this._currentRow = 0;
-		this.maxHeight = maxHeight;
+		this.maxHeight = layout.linesY;
+		this.rows.push(new CellRow(layout.perRow, this.maxHeight, layout.cardGap));
+		this._currentRowIdx = 0;
 		this.h = 0;
 	}
 
 	currentRow = (): CellRow => {
-		return this.rows[this._currentRow];
+		return this.rows[this._currentRowIdx];
 	};
 
 	fits = (card: AbilityCell): boolean => {
-		return this.currentRow().fits(card);
+		return this.currentRow().fits(card)
+			|| card.h + this.h <= this.maxHeight;
 	};
 
-	add = (card: AbilityCell) => {
-		return this.currentRow().add(card);
+	add = (cell: AbilityCell) => {
+		const currentRow = this.currentRow();
+		if (currentRow.fits(cell)) {
+			currentRow.add(cell);
+		} else {
+			const newRow = new CellRow(this._layout.perRow, this.maxHeight - this.h, this._layout.cardGap);
+			if (newRow.fits(cell)) {
+				newRow.add(cell);
+				this.rows.push(newRow);
+				this._currentRowIdx += 1;
+			} else {
+				throw new Error('Can\'t add cell to page');
+			}
+		}
+		this.h = this.rows.map(row => row.h)
+			.reduce((h, rowH) => h + rowH, 0);
+	};
+
+	getAllCells = (): StackedCell[] => {
+		return this.rows.flatMap(row => row.stacks).filter(stack => stack.contents.length);
 	};
 }
 
 export class CardPacker {
-	static packAbilities = (abilities: AbilitySheet[], layout: CardPageLayout): CardPage[] => {
-		const pages: CardPage[] = [];
-		let page = new CardPage(layout.perRow, layout.linesY);
-		abilities.every(a => {
-			const aH = SheetFormatter.calculateAbilitySize(a, layout.cardLineLen);
-			const cell = new AbilityCell(a, aH);
-			if (page.fits(cell)) {
-				page.add(cell);
+	layout: CardPageLayout;
+	pages: CardRowPage[];
+	currentPage: CardRowPage;
+
+	constructor(layout: CardPageLayout) {
+		this.layout = layout;
+		this.pages = [];
+		this.currentPage = this.newPage();
+	}
+
+	reset = () => {
+		this.pages = [];
+		this.currentPage = this.newPage();
+	};
+
+	newPage = (): CardRowPage => {
+		return new CardRowPage(this.layout);
+	};
+
+	placeInPage = (ability: AbilitySheet): boolean => {
+		const abilityHeight = SheetFormatter.calculateAbilitySize(ability, this.layout.cardLineLen);
+		const cell = new AbilityCell(ability, abilityHeight);
+		if (this.currentPage.fits(cell)) {
+			this.currentPage.add(cell);
+			return true;
+		} else {
+			this.pages.push(this.currentPage);
+			this.currentPage = this.newPage();
+
+			// try again with new page
+			if (this.currentPage.fits(cell)) {
+				this.currentPage.add(cell);
 				return true;
 			} else {
-				pages.push(page);
-				page = new CardPage(layout.perRow, layout.linesY);
-
-				// try again with new page
-				if (page.fits(cell)) {
-					page.add(cell);
-				} else {
-					return false;
-				}
+				return false;
 			}
-		});
-		return pages;
+		}
 	};
+
+	packAbilities = (abilities: AbilitySheet[]): CardRowPage[] => {
+		this.reset();
+		abilities.every(a => {
+			return this.placeInPage(a);
+		});
+		if (this.currentPage.getAllCells().length) {
+			this.pages.push(this.currentPage);
+		}
+		return this.pages;
+	};
+
+	// packAbilityGroups = (abilityGroups: AbilitySheet[][]): CardPage[] => {
+	// 	this.reset();
+	// 	abilityGroups.every(group => {
+	// 		this.currentPage.startNewGroup();
+	// 		return group.every(a => {
+	// 			return this.placeInPage(a);
+	// 		});
+	// 	});
+	// 	return this.pages;
+	// };
 };

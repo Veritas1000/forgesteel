@@ -217,6 +217,9 @@
     &.fill-blank:not(#priority) .abilities {
         .card {
             align-self: flex-start;
+            &.notes {
+                align-self: stretch;
+            }
         }
 
         .stacked-cards {

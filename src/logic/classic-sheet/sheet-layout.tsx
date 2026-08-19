@@ -5,6 +5,7 @@ import { HeroSheet } from '@/models/classic-sheets/hero-sheet';
 import { Options } from '@/models/options';
 import { SheetFormatter } from '@/logic/classic-sheet/sheet-formatter';
 import { SheetPageSize } from '@/enums/sheet-page-size';
+import { CardPacker } from './card-packer';
 
 export interface FillerCard {
 	element: JSX.Element;
@@ -38,9 +39,9 @@ export class SheetLayout {
 		const abilitiesPerRow = options.pageOrientation === 'portrait' ? 3 : 4;
 
 		let lineLenPx = options.pageOrientation === 'portrait' ? 415 : 402.5;
-		let linesY = options.pageOrientation === 'portrait' ? 88 : 68;
+		let linesY = options.pageOrientation === 'portrait' ? 91 : 70.5;
 		if (options.classicSheetPageSize === SheetPageSize.A4) {
-			linesY = options.pageOrientation === 'portrait' ? 94 : 66;
+			linesY = options.pageOrientation === 'portrait' ? 97.5 : 68.5;
 			lineLenPx = options.pageOrientation === 'portrait' ? 403 : 428.5;
 		}
 
@@ -233,6 +234,49 @@ export class SheetLayout {
 	};
 
 	static getAbilityPages = (allAbilities: AbilitySheet[], extraCards: ExtraCards, layout: CardPageLayout, getPageId: (s: string) => string) => {
+		const packer = new CardPacker(layout);
+		const pages = packer.packAbilities(allAbilities);
+		console.log(pages);
+		const pageClasses = [ 'abilities', 'page', layout.orientation, `row-cards-${layout.perRow}` ];
+		let p = 1;
+		const abilityCardPages: JSX.Element[] = [];
+		pages.forEach(page => {
+			abilityCardPages.push(
+				<Fragment key={`abilities-${p++}`}>
+					<hr className='dashed' />
+					<div className={pageClasses.join(' ')} id={getPageId(p.toString())}>
+						{page.getAllCells().map((a, i) => {
+							if (a.contents.length > 1) {
+								return (
+									<div className='stacked-cards' key={`abilities-${p}-${i}`}>
+										{a.contents.map(sa =>
+											<AbilityCard
+												key={sa.sheet.id}
+												ability={sa.sheet}
+												height={sa.h}
+											/>
+										)}
+									</div>
+								);
+							} else {
+								return (
+									<AbilityCard
+										key={a.contents[0].sheet.id}
+										ability={a.contents[0].sheet}
+										height={a.contents[0].h}
+									/>
+								);
+							}
+						})}
+						{/* {refCards} */}
+					</div>
+				</Fragment>
+			);
+		});
+		return abilityCardPages;
+	};
+
+	static getAbilityPagesOld = (allAbilities: AbilitySheet[], extraCards: ExtraCards, layout: CardPageLayout, getPageId: (s: string) => string) => {
 		const pageClasses = [ 'abilities', 'page', layout.orientation, `row-cards-${layout.perRow}` ];
 		let p = 1;
 		const abilityCardPages: JSX.Element[] = [];
