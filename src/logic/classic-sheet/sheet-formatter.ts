@@ -858,7 +858,11 @@ export class SheetFormatter {
 			// console.log(`-- Title: ${size}`);
 			size += this.countLines(ability.description, lineWidth * 1.1);
 			// console.log(`-- Description: ${size}`);
-			size += ability.isNotTrueAbility ? 1 : 2.2; // keywords, distance, etc
+			// keywords, type, range, target
+			size += 1;
+			if (!ability.isNotTrueAbility) {
+				size += this.countLines(ability.target, lineWidth * 0.8);;
+			}
 			size += ability.qualifiers?.length ? 0.8 : 0;
 			// console.log(`-- Keywords/Distance/etc.: ${size}`);
 			if (ability.trigger) {
@@ -867,6 +871,7 @@ export class SheetFormatter {
 			// console.log(`-- Trigger: ${size}`);
 
 			ability.sections.forEach((s, n) => {
+				size += 0.4; // section top padding
 				if (typeof s === 'string') {
 					const effectSize = this.countLines(s, lineWidth, 1);
 					// size += (ability.isNotTrueAbility ? 0 : 1.5) + effectSize;
@@ -878,13 +883,10 @@ export class SheetFormatter {
 					size += 0.15 + this.countLines(s.rollT3Effect, rollLineLen);
 				}
 
-				if (n > 0) {
-					size += 0.4;
-				}
 				// console.log(`-- Section [${n + 1}]: ${size}`);
 			});
 
-			size += 0.5; // bottom padding
+			size += 1.3; // bottom padding
 			// console.log(`-- Full: ${size}`);
 			// console.log('============================');
 		}

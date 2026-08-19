@@ -1,4 +1,4 @@
-import { Feature, FeatureAbility, FeatureChoice } from '@/models/feature';
+import { Feature, FeatureAbility, FeatureAbilityData, FeatureChoice } from '@/models/feature';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { Ability } from '@/models/ability';
 import { AbilityData } from '@/data/ability-data';
@@ -14,6 +14,7 @@ import { creation } from '@/data/domains/creation';
 import { demon } from '@/data/monsters/demon';
 import { dragonKnight } from '@/data/ancestries/dragon-knight';
 import { retainer } from '@/data/monsters/retainer';
+import { SupernaturalPerkData } from '@/data/perks/supernatural';
 
 afterEach(() => {
 	vi.resetAllMocks();
@@ -471,6 +472,10 @@ describe('calculateFeatureReferenceSize', () => {
 	});
 });
 
+// 54 is equivalent to the Letter/Portrait cardLineLen
+// which is what I check to get my reference sizes
+const testCardLineLen = 54;
+
 describe('calculateProjectDetailCardSize', () => {
 	test('calculates card size correctly', () => {
 		const sheet = {
@@ -482,7 +487,7 @@ describe('calculateProjectDetailCardSize', () => {
 			pointsGoal: 45
 		} as ProjectSheet;
 
-		const result = SheetFormatter.calculateProjectDetailCardSize(sheet, 54);// 54 is equivalent to the Letter/Portrait cardLineLen
+		const result = SheetFormatter.calculateProjectDetailCardSize(sheet, testCardLineLen);
 		expect(result).toBeCloseTo(14.4, 0.2);
 	});
 });
@@ -522,7 +527,7 @@ describe('calculateProjectsOverviewCardSize', () => {
 		];
 		const sheets = projects.map(p => p as ProjectSheet);
 
-		const result = SheetFormatter.calculateProjectsOverviewCardSize(sheets, 54);
+		const result = SheetFormatter.calculateProjectsOverviewCardSize(sheets, testCardLineLen);
 		expect(result).toBeCloseTo(48.3, 0.2);
 	});
 });
@@ -539,21 +544,31 @@ describe('calculateAbilitySize', () => {
 		.find(f => f.id === 'dragon-knight-feature-2') as FeatureChoice)
 		.data.options.find(f => f.feature.id === 'dragon-knight-feature-2-8')?.feature as FeatureAbility;
 
+	const psychicWhisper = (SupernaturalPerkData.psychicWhisper.data as FeatureAbilityData).ability;
+
 	test.each([
-		[ AbilityData.heal, 12.1 ],
-		[ AbilityData.freeStrikeMelee, 12 ],
-		[ AbilityData.escapeGrab, 22.5 ],
-		[ AbilityData.clawDirt, 21.5 ],
-		[ AbilityData.advance, 9.5 ],
-		[ divineDragon.data.ability, 37.5 ],
-		[ rememberOath.data.ability, 20.5 ],
-		[ arise, 16.5 ]
+		[ AbilityData.heal, 12.5 ],
+		[ AbilityData.freeStrikeMelee, 12.5 ],
+		[ AbilityData.escapeGrab, 23.2 ],
+		[ AbilityData.clawDirt, 21.9 ],
+		[ AbilityData.advance, 10.1 ],
+		[ divineDragon.data.ability, 39 ],
+		[ rememberOath.data.ability, 21.5 ],
+		[ psychicWhisper, 14.1 ],
+		[ arise, 17.5 ]
 	])('calculates size properly for standard abilities', (ability: Ability, expected: number) => {
 		const hero = FactoryLogic.createHero();
 		const sheet = ClassicSheetBuilder.buildAbilitySheet(ability, hero);
 
-		const result = SheetFormatter.calculateAbilitySize(sheet, 54);
-		expect(result).toBeCloseTo(expected, 0);
+		const result = SheetFormatter.calculateAbilitySize(sheet, testCardLineLen);
+
+		const delta = result - expected;
+		// it should not ever be much smaller than expected
+		expect(delta, `${ability.name} is calculated to be too small: expected ${expected} but got ${result}`).toBeGreaterThan(-0.51);
+		// there is more leeway in the other direction - larger
+		// variations in calculated size are okay as long as
+		// it is estimated to be larger than it actually is
+		expect(delta, `${ability.name} is calculated to be too large: expected ${expected} but got ${result}`).toBeLessThan(2);
 	});
 });
 
@@ -567,7 +582,7 @@ describe('calculateFollowerSize()', () => {
 		[ 1, 36.5 ]
 	])('properly calculates the size of a retainer at different levels of advancement', (level, expectedSize) => {
 		const followerSheet = HeroSheetBuilder.buildRetainerSheet(humanWarrior, level);
-		expect(SheetFormatter.calculateFollowerSize(followerSheet, 54)).toBeCloseTo(expectedSize, 0);
+		expect(SheetFormatter.calculateFollowerSize(followerSheet, testCardLineLen)).toBeCloseTo(expectedSize, 0);
 	});
 });
 
@@ -580,7 +595,7 @@ describe('calculateMonsterSize()', () => {
 		[ devilDefector, 60.5 ]
 	])('properly calculates the size of a retainer', (retainer, expectedSize) => {
 		const sheet = ClassicSheetBuilder.buildMonsterSheet(retainer);
-		const size = SheetFormatter.calculateMonsterSize(sheet, 54);
+		const size = SheetFormatter.calculateMonsterSize(sheet, testCardLineLen);
 		expect(Math.abs(expectedSize - size), `Expected ${expectedSize} but got ${size}`).toBeLessThan(1.1);
 	});
 
@@ -592,7 +607,7 @@ describe('calculateMonsterSize()', () => {
 		[ remasch, 41 ]
 	])('properly calculates the size of a monster card', (monster, expectedSize) => {
 		const sheet = ClassicSheetBuilder.buildMonsterSheet(monster);
-		const size = SheetFormatter.calculateMonsterSize(sheet, 54);
+		const size = SheetFormatter.calculateMonsterSize(sheet, testCardLineLen);
 		expect(Math.abs(expectedSize - size), `Expected ${expectedSize} but got ${size}`).toBeLessThan(1.1);
 	});
 });
