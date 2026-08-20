@@ -331,15 +331,19 @@ main#classic-sheet {
 
         .abilities.page,
         .extra-cards.page {
-            @include striped-card(#cdc, #add, 7px);
-            --gap: 10px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--gap);
-            padding: 5px;
+            // @include striped-card(#cdc, #add, 7px);
 
-            .card {
-                margin: 0;
+            &.row-cards,
+            &.column-cards .column-wrapper {
+                --gap: 10px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: var(--gap);
+                padding: 5px;
+
+                .card {
+                    margin: 0;
+                }
             }
         }
 
@@ -419,6 +423,18 @@ main#classic-sheet {
             flex: auto;
             align-self: stretch;
         }
+
+        .page.column-cards {
+            .column-wrapper {
+                flex-direction: column;
+            }
+
+            &.column-cards-3 .card {
+                width: calc((100% - 2 * var(--gap)) / 3);
+                flex-grow: 1;
+            }
+        }
+
 
         &.letter {
             .page.portrait {

@@ -1,20 +1,22 @@
+/* eslint-disable @stylistic/no-multi-spaces */
 import { Feature, FeatureAbility, FeatureAbilityData, FeatureChoice } from '@/models/feature';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { Ability } from '@/models/ability';
 import { AbilityData } from '@/data/ability-data';
 import { ClassicSheetBuilder } from '@/logic/classic-sheet/classic-sheet-builder';
+import { Collections } from '@/utils/collections';
 import { FactoryLogic } from '@/logic/factory-logic';
 import { FeatureType } from '@/enums/feature-type';
 import { HeroSheetBuilder } from '@/logic/hero-sheet/hero-sheet-builder';
 import { Monster } from '@/models/monster';
 import { ProjectSheet } from '@/models/classic-sheets/hero-sheet';
 import { SheetFormatter } from '@/logic/classic-sheet/sheet-formatter';
+import { SupernaturalPerkData } from '@/data/perks/supernatural';
 import { conduit } from '@/data/classes/conduit/conduit';
 import { creation } from '@/data/domains/creation';
 import { demon } from '@/data/monsters/demon';
 import { dragonKnight } from '@/data/ancestries/dragon-knight';
 import { retainer } from '@/data/monsters/retainer';
-import { SupernaturalPerkData } from '@/data/perks/supernatural';
 
 afterEach(() => {
 	vi.resetAllMocks();
@@ -609,5 +611,56 @@ describe('calculateMonsterSize()', () => {
 		const sheet = ClassicSheetBuilder.buildMonsterSheet(monster);
 		const size = SheetFormatter.calculateMonsterSize(sheet, testCardLineLen);
 		expect(Math.abs(expectedSize - size), `Expected ${expectedSize} but got ${size}`).toBeLessThan(1.1);
+	});
+});
+
+describe('sortAndGroupAbilities', () => {
+	test('groups abilities by type', () => {
+		const abilities = [
+			AbilityData.freeStrikeMelee, 	// Free Strike
+			AbilityData.freeStrikeRanged,	// Free Strike
+			AbilityData.advance,			// Move
+			AbilityData.disengage,			// Move
+			AbilityData.catchBreath,		// Maneuver
+			AbilityData.escapeGrab,			// Maneuver
+			AbilityData.clawDirt,			// Maneuver
+			AbilityData.charge,				// Main Action
+			AbilityData.defend,				// Main Action
+			AbilityData.heal				// Main Action
+		];
+		const randomized = Collections.shuffle(abilities)
+			.map(a => ClassicSheetBuilder.buildAbilitySheet(a, undefined));
+
+		const groups = SheetFormatter.sortAndGroupAbilities(randomized);
+		expect(groups.length).toBe(4);
+	});
+
+	test('returns groups in order of ability type following \
+		SheetFormatter.abilityTypeOrder', () => {
+		const abilities = [
+			AbilityData.freeStrikeMelee, 	// Free Strike
+			AbilityData.freeStrikeRanged,	// Free Strike
+			AbilityData.advance,			// Move
+			AbilityData.disengage,			// Move
+			AbilityData.catchBreath,		// Maneuver
+			AbilityData.escapeGrab,			// Maneuver
+			AbilityData.clawDirt,			// Maneuver
+			AbilityData.charge,				// Main Action
+			AbilityData.defend,				// Main Action
+			AbilityData.heal				// Main Action
+		];
+		const randomized = Collections.shuffle(abilities)
+			.map(a => ClassicSheetBuilder.buildAbilitySheet(a, undefined));
+
+		const groups = SheetFormatter.sortAndGroupAbilities(randomized);
+		expect(groups.length).toBe(4);
+		expect(groups[0].length).toBe(3);
+		expect(groups[0][0].actionType).toBe('Main Action');
+		expect(groups[1].length).toBe(3);
+		expect(groups[1][0].actionType).toBe('Maneuver');
+		expect(groups[2].length).toBe(2);
+		expect(groups[2][0].actionType).toBe('Free Strike');
+		expect(groups[3].length).toBe(2);
+		expect(groups[3][0].actionType).toBe('Move Action');
 	});
 });

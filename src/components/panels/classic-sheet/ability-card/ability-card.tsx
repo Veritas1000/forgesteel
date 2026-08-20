@@ -77,9 +77,15 @@ export const AbilityCard = (props: Props) => {
 	};
 
 	const getPowerRollSection = (section: PowerRollSection) => {
+		let powerRollSign = '+ ';
+		let powerRollStr = section.rollPower;
+		if (section.rollPower && parseInt(section.rollPower) < 0) {
+			powerRollSign = '';
+			powerRollStr = section.rollPower.replace('-', '- ');
+		}
 		return (
 			<div className='power-roll'>
-				<div className='power'>Power Roll + <DrawSteelSymbolText content={section.rollPower} lookFor='characteristics' /></div>
+				<div className='power'>Power Roll {powerRollSign}<DrawSteelSymbolText content={powerRollStr} lookFor='characteristics' /></div>
 				<div className='roll-tiers'>
 					<div className='tier t1'>
 						<img src={rollT1} alt='≤ 11' className='range' />

@@ -5,7 +5,7 @@ import { HeroSheet } from '@/models/classic-sheets/hero-sheet';
 import { Options } from '@/models/options';
 import { SheetFormatter } from '@/logic/classic-sheet/sheet-formatter';
 import { SheetPageSize } from '@/enums/sheet-page-size';
-import { CardPacker } from './card-packer';
+import { CardPacker } from './card-layout/card-packer';
 
 export interface FillerCard {
 	element: JSX.Element;
@@ -25,6 +25,7 @@ export interface CardPageLayout {
 	linesY: number;
 	cardLineLen: number;
 	cardGap: number;
+	lineHPx: number;
 };
 
 export class SheetLayout {
@@ -50,8 +51,17 @@ export class SheetLayout {
 			perRow: abilitiesPerRow,
 			linesY: linesY,
 			cardLineLen: Math.round(lineLenPx / charWidth),
-			cardGap: Math.round(gapPx / charWidth)
+			cardGap: Math.round(gapPx / charWidth),
+			lineHPx: Math.round(SheetLayout.getPageHeightPx(options) / linesY)
 		};
+	};
+
+	static getPageHeightPx = (options: Options) => {
+		let pageHPx = options.pageOrientation === 'portrait' ? 1650 : 1275;
+		if (options.classicSheetPageSize === SheetPageSize.A4) {
+			pageHPx = options.pageOrientation === 'portrait' ? 1754 : 1240;
+		}
+		return pageHPx;
 	};
 
 	static getFollowerCardsLayout = (options: Options, hasRetainers: boolean): CardPageLayout => {
@@ -90,7 +100,8 @@ export class SheetLayout {
 			perRow: cardsPerRow,
 			linesY: linesY,
 			cardLineLen: Math.round(lineLenPx / charWidth),
-			cardGap: Math.round(gapPx / charWidth)
+			cardGap: Math.round(gapPx / charWidth),
+			lineHPx: Math.round(SheetLayout.getPageHeightPx(options) / linesY)
 		};
 	};
 
@@ -228,31 +239,50 @@ export class SheetLayout {
 			allAbilities = allAbilities.concat(character.standardAbilities.filter(a => options.shownStandardAbilities.includes(a.id)));
 		}
 
-		allAbilities.sort(SheetFormatter.sortAbilitiesByType);
-
 		return this.getAbilityPages(allAbilities, extraCards, layout, p => SheetFormatter.getPageId('hero-sheet', character.hero.id, `abilities-${p}`));
 	};
 
 	static getAbilityPages = (allAbilities: AbilitySheet[], extraCards: ExtraCards, layout: CardPageLayout, getPageId: (s: string) => string) => {
 		const packer = new CardPacker(layout);
-		const pages = packer.packAbilities(allAbilities);
-		console.log(pages);
-		const pageClasses = [ 'abilities', 'page', layout.orientation, `row-cards-${layout.perRow}` ];
+
+		// old style
+		// allAbilities.sort(SheetFormatter.sortAbilitiesByType);
+		// const pages = packer.packAbilities(allAbilities);
+
+		// new style
+		const abilityGroups = SheetFormatter.sortAndGroupAbilities(allAbilities);
+		console.log(abilityGroups);
+		const pages = packer.packAbilityGroups(abilityGroups);
+		// console.log(pages);
+		// const pageClasses = [ 'abilities', 'page', layout.orientation, 'row-cards', `row-cards-${layout.perRow}` ];
+		const pageClasses = [ 'abilities', 'page', layout.orientation, 'column-cards', `column-cards-${layout.perRow}` ];
 		let p = 1;
 		const abilityCardPages: JSX.Element[] = [];
 		pages.forEach(page => {
+			const pageHPx = page.h * layout.lineHPx;
 			abilityCardPages.push(
 				<Fragment key={`abilities-${p++}`}>
 					<hr className='dashed' />
 					<div className={pageClasses.join(' ')} id={getPageId(p.toString())}>
-						{page.getAllCells().map((a, i) => {
+						<div className='column-wrapper' style={{ height: pageHPx }}>
+							{page.getAllCells().map((a, _i) => {
+								return (
+									<AbilityCard
+										key={a.data.id}
+										ability={a.data}
+										height={a.h}
+									/>
+								);
+							})}
+						</div>
+						{/* {page.getAllCells().map((a, _i) => {
 							if (a.contents.length > 1) {
 								return (
 									<div className='stacked-cards' key={`abilities-${p}-${i}`}>
 										{a.contents.map(sa =>
 											<AbilityCard
-												key={sa.sheet.id}
-												ability={sa.sheet}
+												key={sa.data.id}
+												ability={sa.data}
 												height={sa.h}
 											/>
 										)}
@@ -261,13 +291,13 @@ export class SheetLayout {
 							} else {
 								return (
 									<AbilityCard
-										key={a.contents[0].sheet.id}
-										ability={a.contents[0].sheet}
+										key={a.contents[0].data.id}
+										ability={a.contents[0].data}
 										height={a.contents[0].h}
 									/>
 								);
 							}
-						})}
+						})} */}
 						{/* {refCards} */}
 					</div>
 				</Fragment>

@@ -861,7 +861,7 @@ export class SheetFormatter {
 			// keywords, type, range, target
 			size += 1;
 			if (!ability.isNotTrueAbility) {
-				size += this.countLines(ability.target, lineWidth * 0.8);;
+				size += this.countLines(ability.target, lineWidth * 0.8);
 			}
 			size += ability.qualifiers?.length ? 0.8 : 0;
 			// console.log(`-- Keywords/Distance/etc.: ${size}`);
@@ -870,7 +870,8 @@ export class SheetFormatter {
 			}
 			// console.log(`-- Trigger: ${size}`);
 
-			ability.sections.forEach((s, n) => {
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+			ability.sections.forEach((s, _n) => {
 				size += 0.4; // section top padding
 				if (typeof s === 'string') {
 					const effectSize = this.countLines(s, lineWidth, 1);
@@ -882,8 +883,7 @@ export class SheetFormatter {
 					size += 0.15 + this.countLines(s.rollT2Effect, rollLineLen);
 					size += 0.15 + this.countLines(s.rollT3Effect, rollLineLen);
 				}
-
-				// console.log(`-- Section [${n + 1}]: ${size}`);
+				// console.log(`-- Section [${_n + 1}]: ${size}`);
 			});
 
 			size += 1.3; // bottom padding
@@ -1046,6 +1046,20 @@ export class SheetFormatter {
 			}
 			return alpha;
 		}
+	};
+
+	static sortAndGroupAbilities = (abilities: AbilitySheet[]): AbilitySheet[][] => {
+		const sorted = abilities.sort(SheetFormatter.sortAbilitiesByType);
+		const abilitiesByType = Map.groupBy(sorted, sheet => {
+			if (sheet.cost) {
+				return `${sheet.actionType}-${sheet.cost}`;
+			} else {
+				return sheet.actionType;
+			}
+		});
+		// console.log(abilitiesByType);
+		return abilitiesByType.values().toArray();
+		// return abilities.map(a => [ a ]);
 	};
 
 	static characteristicOrder: string[] = [

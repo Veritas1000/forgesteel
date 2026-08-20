@@ -1,7 +1,7 @@
 @use '../../../pages/classic-sheet/common.scss';
 
 #classic-sheet .hero-sheet .ability.card {
-    @include common.striped-card;
+    // @include common.striped-card;
     padding: 10px;
     display:grid;
     justify-self: stretch;
