@@ -275,6 +275,13 @@ export const SettingsModal = (props: Props) => {
 			saveOptions(copy);
 		};
 
+		const setPackingStrategy = (value: 'original' | 'dense') => {
+			const copy = Utils.copy(options);
+			copy.packingStrategy = value;
+			setOptions(copy);
+			saveOptions(copy);
+		};
+
 		return (
 			<Expander title='Heroes - Classic View'>
 				<Space orientation='vertical' style={{ width: '100%' }}>
@@ -309,7 +316,7 @@ export const SettingsModal = (props: Props) => {
 						}
 					/>
 					<LabelControl
-						label='Fill Style'
+						label='Ability page filler'
 						control={
 							<Segmented
 								name='filler'
@@ -320,6 +327,29 @@ export const SettingsModal = (props: Props) => {
 								]}
 								value={options.fillStyle}
 								onChange={setFillStyle}
+							/>
+						}
+					/>
+					<LabelControl
+						label='Ability page layout strategy'
+						control={
+							<Select
+								style={{ width: '100%' }}
+								options={[
+									{
+										value: 'original',
+										label: 'Original',
+										desc: 'Original layout method. Cards in (mostly) aligned rows. Highly ordered.'
+									},
+									{
+										value: 'dense',
+										label: 'Dense',
+										desc: 'Denser layout. Cards in more column-based layout. Slightly less ordered.'
+									}
+								]}
+								optionRender={option => <Field label={option.data.label} value={option.data.desc} />}
+								value={options.packingStrategy}
+								onChange={setPackingStrategy}
 							/>
 						}
 					/>

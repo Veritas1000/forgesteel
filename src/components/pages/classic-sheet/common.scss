@@ -331,10 +331,8 @@ main#classic-sheet {
 
         .abilities.page,
         .extra-cards.page {
-            // @include striped-card(#cdc, #add, 7px);
-
             &.row-cards,
-            &.column-cards .column-wrapper {
+            &.column-cards {
                 --gap: 10px;
                 display: flex;
                 flex-wrap: wrap;
@@ -425,9 +423,7 @@ main#classic-sheet {
         }
 
         .page.column-cards {
-            .column-wrapper {
-                flex-direction: column;
-            }
+            flex-direction: column;
 
             &.column-cards-3 .card {
                 width: calc((100% - 2 * var(--gap)) / 3);
@@ -470,6 +466,10 @@ main#classic-sheet {
                 max-width: 1754px;
                 max-height: 1240px;
             }
+        }
+
+        &.debug .abilities.page {
+            @include striped-card(#cdc, #add, 7px);
         }
     }
 

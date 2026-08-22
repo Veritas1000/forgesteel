@@ -1,3 +1,5 @@
+import { CardPageLayout } from '../sheet-layout';
+
 export class Cell<T> {
 	data: T;
 	h: number;
@@ -32,4 +34,28 @@ export class StackedCell<T> {
 		this.contents.push(cell);
 		this.h += cell.h + (this.contents.length > 1 ? this._spacing : 0);
 	}
+}
+
+export interface CellPage<T> {
+	getCells(): (Cell<T> | StackedCell<T>)[];
+	h: number;
+	getHeight(): number | string;
+}
+
+export abstract class CellPageBase<T> implements CellPage<T> {
+	_layout: CardPageLayout;
+	h: number;
+	maxHeight: number;
+
+	constructor(layout: CardPageLayout) {
+		this._layout = layout;
+		this.maxHeight = layout.linesY;
+		this.h = 0;
+	};
+
+	getHeight(): number | string {
+		return this.h * this._layout.lineHPx;
+	};
+
+	abstract getCells(): (Cell<T> | StackedCell<T>)[];
 }

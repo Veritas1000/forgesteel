@@ -1,4 +1,4 @@
-import { Cell, StackedCell } from './cell';
+import { Cell, CellPageBase, StackedCell } from './cell';
 import { CardPageLayout } from '../sheet-layout';
 import { CellRow } from './cell-row';
 
@@ -6,20 +6,15 @@ import { CellRow } from './cell-row';
 // It will focus on packing cards to maximize space, but only
 // to the point where a given row will only be as tall as the
 // largest single card in that row.
-export class CellRowPage<T> {
+export class CellRowPage<T> extends CellPageBase<T> {
 	rows: CellRow<T>[];
-	_layout: CardPageLayout;
 	_currentRowIdx: number;
-	h: number;
-	maxHeight: number;
 
 	constructor(layout: CardPageLayout) {
-		this._layout = layout;
+		super(layout);
 		this.rows = [];
-		this.maxHeight = layout.linesY;
 		this.rows.push(new CellRow(layout.perRow, this.maxHeight, layout.cardGap));
 		this._currentRowIdx = 0;
-		this.h = 0;
 	}
 
 	currentRow = (): CellRow<T> => {
@@ -49,7 +44,11 @@ export class CellRowPage<T> {
 			.reduce((h, rowH) => h + rowH, 0);
 	};
 
-	getAllCells = (): StackedCell<T>[] => {
+	getHeight() {
+		return '100%';
+	};
+
+	getCells = (): StackedCell<T>[] => {
 		return this.rows.flatMap(row => row.stacks).filter(stack => stack.contents.length);
 	};
 }

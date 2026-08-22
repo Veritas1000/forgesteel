@@ -63,9 +63,12 @@ export const HeroSheetPage = (props: Props) => {
 				classes.push('color');
 				classes.push(`colors-${options.colorScheme}`);
 			}
+			if (options.debugClassicSheet) {
+				classes.push('debug');
+			}
 			return classes;
 		},
-		[ options.classicSheetPageSize, options.colorSheet, options.colorScheme, options.fillStyle ]
+		[ options.classicSheetPageSize, options.colorSheet, options.colorScheme, options.fillStyle, options.debugClassicSheet ]
 	);
 
 	const layout = useMemo(

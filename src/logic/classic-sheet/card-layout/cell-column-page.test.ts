@@ -195,7 +195,7 @@ describe.concurrent('CellColumnPage', () => {
 		});
 	});
 
-	describe.concurrent('getAllCells', () => {
+	describe.concurrent('getCells', () => {
 		test('returns all cells from all rows in T->B, L-R order', () => {
 			const layout = {
 				perRow: 3,
@@ -208,7 +208,7 @@ describe.concurrent('CellColumnPage', () => {
 			// should be:
 			// | [15] [20] [15] |
 			// | [10]           |
-			const cells = page.getAllCells();
+			const cells = page.getCells();
 			expect(cells.length).toBe(4);
 
 			expect(cells[0]).toBe(cell15);

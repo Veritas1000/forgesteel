@@ -727,6 +727,10 @@ ${encounter.objective.victories}`
 			options.fillStyle = 'rules';
 		}
 
+		if (options.packingStrategy === undefined) {
+			options.packingStrategy = 'original';
+		}
+
 		if (options.colorScheme === undefined) {
 			options.colorScheme = 'community';
 		}

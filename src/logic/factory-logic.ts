@@ -1077,6 +1077,7 @@ export class FactoryLogic {
 			classicSheetPageSize: SheetPageSize.Letter,
 			colorSheet: true,
 			fillStyle: 'rules',
+			packingStrategy: 'original',
 			colorScheme: 'community',
 			showPowerRollCalculation: true,
 			sheetTextColor: 'default',

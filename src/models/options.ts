@@ -19,6 +19,7 @@ export interface Options {
 	classicSheetPageSize: SheetPageSize;
 	colorSheet: boolean;
 	fillStyle: 'rules' | 'blank';
+	packingStrategy: 'original' | 'dense';
 	colorScheme: 'community' | 'classic';
 	showPowerRollCalculation: boolean;
 	sheetTextColor: 'light' | 'default' | 'dark';

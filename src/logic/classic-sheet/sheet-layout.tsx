@@ -1,3 +1,5 @@
+import { CardLayoutStrategy, CardLayoutStrategyFactory } from './card-layout/layout-strategy';
+import { Cell, StackedCell } from './card-layout/cell';
 import { Fragment, JSX } from 'react';
 import { AbilityCard } from '@/components/panels/classic-sheet/ability-card/ability-card';
 import { AbilitySheet } from '@/models/classic-sheets/ability-sheet';
@@ -5,7 +7,6 @@ import { HeroSheet } from '@/models/classic-sheets/hero-sheet';
 import { Options } from '@/models/options';
 import { SheetFormatter } from '@/logic/classic-sheet/sheet-formatter';
 import { SheetPageSize } from '@/enums/sheet-page-size';
-import { CardPacker } from './card-layout/card-packer';
 
 export interface FillerCard {
 	element: JSX.Element;
@@ -239,65 +240,59 @@ export class SheetLayout {
 			allAbilities = allAbilities.concat(character.standardAbilities.filter(a => options.shownStandardAbilities.includes(a.id)));
 		}
 
-		return this.getAbilityPages(allAbilities, extraCards, layout, p => SheetFormatter.getPageId('hero-sheet', character.hero.id, `abilities-${p}`));
+		const cardLayoutStrategy = CardLayoutStrategyFactory.from(options, layout);
+
+		return this.renderAbilityPages(allAbilities, extraCards, cardLayoutStrategy, p => SheetFormatter.getPageId('hero-sheet', character.hero.id, `abilities-${p}`));
 	};
 
-	static getAbilityPages = (allAbilities: AbilitySheet[], extraCards: ExtraCards, layout: CardPageLayout, getPageId: (s: string) => string) => {
-		const packer = new CardPacker(layout);
+	static renderAbilityPages = (allAbilities: AbilitySheet[], extraCards: ExtraCards, cardLayoutStrategy: CardLayoutStrategy, getPageId: (s: string) => string) => {
+		const pages = cardLayoutStrategy.packAbilities(allAbilities, extraCards);
 
 		// old style
-		// allAbilities.sort(SheetFormatter.sortAbilitiesByType);
-		// const pages = packer.packAbilities(allAbilities);
-
-		// new style
-		const abilityGroups = SheetFormatter.sortAndGroupAbilities(allAbilities);
-		console.log(abilityGroups);
-		const pages = packer.packAbilityGroups(abilityGroups);
-		// console.log(pages);
-		// const pageClasses = [ 'abilities', 'page', layout.orientation, 'row-cards', `row-cards-${layout.perRow}` ];
-		const pageClasses = [ 'abilities', 'page', layout.orientation, 'column-cards', `column-cards-${layout.perRow}` ];
-		let p = 1;
-		const abilityCardPages: JSX.Element[] = [];
-		pages.forEach(page => {
-			const pageHPx = page.h * layout.lineHPx;
-			abilityCardPages.push(
+		// ...
+		// refCards = SheetLayout.getFillerCards(spacesToFill, spaceY, rowH, extraCards, layout);
+		const abilityCardPages: JSX.Element[] = pages.map((page, p) => {
+			return (
 				<Fragment key={`abilities-${p++}`}>
 					<hr className='dashed' />
-					<div className={pageClasses.join(' ')} id={getPageId(p.toString())}>
-						<div className='column-wrapper' style={{ height: pageHPx }}>
-							{page.getAllCells().map((a, _i) => {
+					<div
+						className={cardLayoutStrategy.getAbilityPageClasses().join(' ')}
+						id={getPageId(p.toString())}
+						style={{ height: page.getHeight() }}
+					>
+						{page.getCells().map((cell, i) => {
+							if (cell instanceof Cell) {
 								return (
 									<AbilityCard
-										key={a.data.id}
-										ability={a.data}
-										height={a.h}
+										key={cell.data.id}
+										ability={cell.data}
+										height={cell.h}
 									/>
 								);
-							})}
-						</div>
-						{/* {page.getAllCells().map((a, _i) => {
-							if (a.contents.length > 1) {
-								return (
-									<div className='stacked-cards' key={`abilities-${p}-${i}`}>
-										{a.contents.map(sa =>
-											<AbilityCard
-												key={sa.data.id}
-												ability={sa.data}
-												height={sa.h}
-											/>
-										)}
-									</div>
-								);
-							} else {
-								return (
-									<AbilityCard
-										key={a.contents[0].data.id}
-										ability={a.contents[0].data}
-										height={a.contents[0].h}
-									/>
-								);
+							} else if (cell instanceof StackedCell) {
+								if (cell.contents.length > 1) {
+									return (
+										<div className='stacked-cards' key={`abilities-${p}-${i}`}>
+											{cell.contents.map(sa =>
+												<AbilityCard
+													key={sa.data.id}
+													ability={sa.data}
+													height={sa.h}
+												/>
+											)}
+										</div>
+									);
+								} else {
+									return (
+										<AbilityCard
+											key={cell.contents[0].data.id}
+											ability={cell.contents[0].data}
+											height={cell.contents[0].h}
+										/>
+									);
+								}
 							}
-						})} */}
+						})}
 						{/* {refCards} */}
 					</div>
 				</Fragment>
@@ -306,192 +301,192 @@ export class SheetLayout {
 		return abilityCardPages;
 	};
 
-	static getAbilityPagesOld = (allAbilities: AbilitySheet[], extraCards: ExtraCards, layout: CardPageLayout, getPageId: (s: string) => string) => {
-		const pageClasses = [ 'abilities', 'page', layout.orientation, `row-cards-${layout.perRow}` ];
-		let p = 1;
-		const abilityCardPages: JSX.Element[] = [];
-		let numAbilitiesPlaced = 0;
-		while (numAbilitiesPlaced < allAbilities.length) {
-			// build a single page
-			console.log(`=== Building Ability Page - lines: ${layout.linesY} ========`);
-			const pageStart = numAbilitiesPlaced;
-			let pageH = 0;
-			let rowH = 0;
-			let pageAbilityGrid: { card: AbilitySheet, h: number; }[][] = [];
-			let refCards: JSX.Element[] = [];
+	// static getAbilityPagesOld = (allAbilities: AbilitySheet[], extraCards: ExtraCards, layout: CardPageLayout, getPageId: (s: string) => string) => {
+	// 	const pageClasses = [ 'abilities', 'page', layout.orientation, `row-cards-${layout.perRow}` ];
+	// 	let p = 1;
+	// 	const abilityCardPages: JSX.Element[] = [];
+	// 	let numAbilitiesPlaced = 0;
+	// 	while (numAbilitiesPlaced < allAbilities.length) {
+	// 		// build a single page
+	// 		console.log(`=== Building Ability Page - lines: ${layout.linesY} ========`);
+	// 		const pageStart = numAbilitiesPlaced;
+	// 		let pageH = 0;
+	// 		let rowH = 0;
+	// 		let pageAbilityGrid: { card: AbilitySheet, h: number; }[][] = [];
+	// 		let refCards: JSX.Element[] = [];
 
-			while (numAbilitiesPlaced < allAbilities.length && pageH < layout.linesY) {
-				// Try to fill a row with ability cards, calculating height
-				console.log(`-- Starting new row at h: ${pageH}, spaceAvailable: ${layout.linesY - pageH}`);
-				const rowStartN = numAbilitiesPlaced;
-				// const rowEnd = Math.min(numAbilitiesPlaced + layout.perRow, allAbilities.length);
-				const rowAbilities = allAbilities.slice(rowStartN);
+	// 		while (numAbilitiesPlaced < allAbilities.length && pageH < layout.linesY) {
+	// 			// Try to fill a row with ability cards, calculating height
+	// 			console.log(`-- Starting new row at h: ${pageH}, spaceAvailable: ${layout.linesY - pageH}`);
+	// 			const rowStartN = numAbilitiesPlaced;
+	// 			// const rowEnd = Math.min(numAbilitiesPlaced + layout.perRow, allAbilities.length);
+	// 			const rowAbilities = allAbilities.slice(rowStartN);
 
-				rowH = 0;
-				let rowSlotsFilled = 0;
-				let rowIsFilled = false;
+	// 			rowH = 0;
+	// 			let rowSlotsFilled = 0;
+	// 			let rowIsFilled = false;
 
-				let slotH = 0;
-				let currentSlotCards: { card: AbilitySheet, h: number }[] = [];
-				rowAbilities.every(a => {
-					// if row was just filled, break out
-					if (rowIsFilled) {
-						return false;
-					}
+	// 			let slotH = 0;
+	// 			let currentSlotCards: { card: AbilitySheet, h: number }[] = [];
+	// 			rowAbilities.every(a => {
+	// 				// if row was just filled, break out
+	// 				if (rowIsFilled) {
+	// 					return false;
+	// 				}
 
-					// Calculate the next ability card height
-					const aH = SheetFormatter.calculateAbilitySize(a, layout.cardLineLen);
-					console.log(' >> Trying to place card', { cardName: a.name, h: aH, slotH: slotH, rowH: rowH });
-					// if we are trying to fill a partial slot, check combined height
-					if (currentSlotCards.length > 0) {
-						// only fill up to current row height (+ a little wiggle room)
-						let canStack = slotH + aH <= (rowH + 2);
-						// canStack && console.log('    > it can stack in the current slot');
-						// -or- if there is not a lot of pageH left, allow going up to that
-						if (layout.linesY - (pageH + rowH) < 20) {
-							canStack = pageH + Math.max(slotH + aH, rowH) <= layout.linesY;
-							// canStack && console.log('    > End of page - allow it to stack in the current slot');
-						}
-						if (canStack) {
-							currentSlotCards.push({ card: a, h: aH });
-							numAbilitiesPlaced += 1;
-							slotH += aH;
+	// 				// Calculate the next ability card height
+	// 				const aH = SheetFormatter.calculateAbilitySize(a, layout.cardLineLen);
+	// 				console.log(' >> Trying to place card', { cardName: a.name, h: aH, slotH: slotH, rowH: rowH });
+	// 				// if we are trying to fill a partial slot, check combined height
+	// 				if (currentSlotCards.length > 0) {
+	// 					// only fill up to current row height (+ a little wiggle room)
+	// 					let canStack = slotH + aH <= (rowH + 2);
+	// 					// canStack && console.log('    > it can stack in the current slot');
+	// 					// -or- if there is not a lot of pageH left, allow going up to that
+	// 					if (layout.linesY - (pageH + rowH) < 20) {
+	// 						canStack = pageH + Math.max(slotH + aH, rowH) <= layout.linesY;
+	// 						// canStack && console.log('    > End of page - allow it to stack in the current slot');
+	// 					}
+	// 					if (canStack) {
+	// 						currentSlotCards.push({ card: a, h: aH });
+	// 						numAbilitiesPlaced += 1;
+	// 						slotH += aH;
 
-							rowH = Math.max(slotH, rowH);
+	// 						rowH = Math.max(slotH, rowH);
 
-							console.log(`    >  - slotH now ${slotH}`);
-							console.log(`    >  - rowH now ${rowH}`);
+	// 						console.log(`    >  - slotH now ${slotH}`);
+	// 						console.log(`    >  - rowH now ${rowH}`);
 
-							return true;
-						} else {
-							// Can't stack with previous slot, place *previous* slot
-							console.log('    > it can\'t stack in the current slot');
-							pageAbilityGrid.push(currentSlotCards);
-							rowH = Math.max(rowH, slotH);
-							currentSlotCards = [];
-							slotH = 0;
+	// 						return true;
+	// 					} else {
+	// 						// Can't stack with previous slot, place *previous* slot
+	// 						console.log('    > it can\'t stack in the current slot');
+	// 						pageAbilityGrid.push(currentSlotCards);
+	// 						rowH = Math.max(rowH, slotH);
+	// 						currentSlotCards = [];
+	// 						slotH = 0;
 
-							rowSlotsFilled += 1;
-							rowIsFilled = rowSlotsFilled === layout.perRow;
+	// 						rowSlotsFilled += 1;
+	// 						rowIsFilled = rowSlotsFilled === layout.perRow;
 
-							if (rowIsFilled) {
-								return false;
-							}
-						}
-					}
+	// 						if (rowIsFilled) {
+	// 							return false;
+	// 						}
+	// 					}
+	// 				}
 
-					// If we got this far, check height as a new slot
-					if (pageH + aH <= layout.linesY) {
-						currentSlotCards.push({ card: a, h: aH });
-						numAbilitiesPlaced += 1;
-						slotH += aH;
+	// 				// If we got this far, check height as a new slot
+	// 				if (pageH + aH <= layout.linesY) {
+	// 					currentSlotCards.push({ card: a, h: aH });
+	// 					numAbilitiesPlaced += 1;
+	// 					slotH += aH;
 
-						// Check if we can consolidate *previous* cards based on current rowH
-						// Process:
-						// - start with most recent TWO slots (only makes sense at 2+)
-						// 		(or just grab whole row?)
-						// - see if the combined heights is <= the latest card H
-						// - if so, combine them and re-add to the array, adjusting rowSlots as necessary
-						if (rowSlotsFilled >= 2) {
-							let currentRow: { card: AbilitySheet, h: number; }[][] = [];
+	// 					// Check if we can consolidate *previous* cards based on current rowH
+	// 					// Process:
+	// 					// - start with most recent TWO slots (only makes sense at 2+)
+	// 					// 		(or just grab whole row?)
+	// 					// - see if the combined heights is <= the latest card H
+	// 					// - if so, combine them and re-add to the array, adjusting rowSlots as necessary
+	// 					if (rowSlotsFilled >= 2) {
+	// 						let currentRow: { card: AbilitySheet, h: number; }[][] = [];
 
-							for (let i = rowSlotsFilled; i > 0; --i) {
-								const slot = pageAbilityGrid.pop();
-								if (slot) {
-									currentRow.unshift(slot);
-								}
-							}
+	// 						for (let i = rowSlotsFilled; i > 0; --i) {
+	// 							const slot = pageAbilityGrid.pop();
+	// 							if (slot) {
+	// 								currentRow.unshift(slot);
+	// 							}
+	// 						}
 
-							const slotHeights = currentRow.map(arr => arr.reduce((h, ash) => h + ash.h, 0));
-							if (slotHeights[slotHeights.length - 1] + slotHeights[slotHeights.length - 2] <= slotH) {
-								const combined = currentRow.slice(-2).flat(1);
-								currentRow = currentRow.slice(0, -2);
-								currentRow.push(combined);
-								rowSlotsFilled -= 1;
-							}
+	// 						const slotHeights = currentRow.map(arr => arr.reduce((h, ash) => h + ash.h, 0));
+	// 						if (slotHeights[slotHeights.length - 1] + slotHeights[slotHeights.length - 2] <= slotH) {
+	// 							const combined = currentRow.slice(-2).flat(1);
+	// 							currentRow = currentRow.slice(0, -2);
+	// 							currentRow.push(combined);
+	// 							rowSlotsFilled -= 1;
+	// 						}
 
-							currentRow.forEach(ash => pageAbilityGrid.push(ash));
-						}
+	// 						currentRow.forEach(ash => pageAbilityGrid.push(ash));
+	// 					}
 
-						return true;
-					}
-					return false;
-				});
-				// The final card will still need to be placed if we ended by going through all of the cards
-				if (!rowIsFilled && currentSlotCards.length > 0) {
-					pageAbilityGrid.push(currentSlotCards);
-					rowH = Math.max(rowH, slotH);
-					rowSlotsFilled += 1;
-					rowIsFilled = rowSlotsFilled === layout.perRow;
-				}
+	// 					return true;
+	// 				}
+	// 				return false;
+	// 			});
+	// 			// The final card will still need to be placed if we ended by going through all of the cards
+	// 			if (!rowIsFilled && currentSlotCards.length > 0) {
+	// 				pageAbilityGrid.push(currentSlotCards);
+	// 				rowH = Math.max(rowH, slotH);
+	// 				rowSlotsFilled += 1;
+	// 				rowIsFilled = rowSlotsFilled === layout.perRow;
+	// 			}
 
-				pageH += rowH;
-				if (rowH > 0) {
-					pageH += 2.5; // For vertical card gap between rows
-				}
+	// 			pageH += rowH;
+	// 			if (rowH > 0) {
+	// 				pageH += 2.5; // For vertical card gap between rows
+	// 			}
 
-				// If we didn't fill this row, break out to start getting filler cards
-				if (!rowIsFilled) {
-					break;
-				}
-			}
-			const filledSlotsInLastRow = (pageAbilityGrid.length % layout.perRow) || layout.perRow;
-			if (filledSlotsInLastRow < layout.perRow || pageH < layout.linesY) {
-				// try to find filler cards that will fit
-				const spacesToFill = layout.perRow - filledSlotsInLastRow;
-				let spaceY = layout.linesY - pageH + rowH;
-				if (spacesToFill === 0) {
-					// new row, so remove prev rowH
-					spaceY -= rowH;
-					rowH = 0;
-				}
-				refCards = SheetLayout.getFillerCards(spacesToFill, spaceY, rowH, extraCards, layout);
+	// 			// If we didn't fill this row, break out to start getting filler cards
+	// 			if (!rowIsFilled) {
+	// 				break;
+	// 			}
+	// 		}
+	// 		const filledSlotsInLastRow = (pageAbilityGrid.length % layout.perRow) || layout.perRow;
+	// 		if (filledSlotsInLastRow < layout.perRow || pageH < layout.linesY) {
+	// 			// try to find filler cards that will fit
+	// 			const spacesToFill = layout.perRow - filledSlotsInLastRow;
+	// 			let spaceY = layout.linesY - pageH + rowH;
+	// 			if (spacesToFill === 0) {
+	// 				// new row, so remove prev rowH
+	// 				spaceY -= rowH;
+	// 				rowH = 0;
+	// 			}
+	// 			refCards = SheetLayout.getFillerCards(spacesToFill, spaceY, rowH, extraCards, layout);
 
-				if (refCards.length < spacesToFill && filledSlotsInLastRow < layout.perRow) {
-					// Incomplete row, remove partial row
-					const newEnd = pageAbilityGrid.length - filledSlotsInLastRow;
-					numAbilitiesPlaced -= filledSlotsInLastRow;
-					pageAbilityGrid = pageAbilityGrid.slice(0, newEnd);
-				}
-			}
+	// 			if (refCards.length < spacesToFill && filledSlotsInLastRow < layout.perRow) {
+	// 				// Incomplete row, remove partial row
+	// 				const newEnd = pageAbilityGrid.length - filledSlotsInLastRow;
+	// 				numAbilitiesPlaced -= filledSlotsInLastRow;
+	// 				pageAbilityGrid = pageAbilityGrid.slice(0, newEnd);
+	// 			}
+	// 		}
 
-			if (numAbilitiesPlaced === pageStart) {
-				numAbilitiesPlaced = allAbilities.length;
-			}
-			abilityCardPages.push(
-				<Fragment key={`abilities-${p++}`}>
-					<hr className='dashed' />
-					<div className={pageClasses.join(' ')} id={getPageId(p.toString())}>
-						{pageAbilityGrid.map((a, i) => {
-							if (a.length > 1) {
-								return (
-									<div className='stacked-cards' key={`abilities-${p}-${i}`}>
-										{a.map(sa =>
-											<AbilityCard
-												key={sa.card.id}
-												ability={sa.card}
-												height={sa.h}
-											/>
-										)}
-									</div>
-								);
-							} else {
-								return (
-									<AbilityCard
-										key={a[0].card.id}
-										ability={a[0].card}
-										height={a[0].h}
-									/>
-								);
-							}
-						})}
-						{refCards}
-					</div>
-				</Fragment>
-			);
-		}
-		return abilityCardPages;
-	};
+	// 		if (numAbilitiesPlaced === pageStart) {
+	// 			numAbilitiesPlaced = allAbilities.length;
+	// 		}
+	// 		abilityCardPages.push(
+	// 			<Fragment key={`abilities-${p++}`}>
+	// 				<hr className='dashed' />
+	// 				<div className={pageClasses.join(' ')} id={getPageId(p.toString())}>
+	// 					{pageAbilityGrid.map((a, i) => {
+	// 						if (a.length > 1) {
+	// 							return (
+	// 								<div className='stacked-cards' key={`abilities-${p}-${i}`}>
+	// 									{a.map(sa =>
+	// 										<AbilityCard
+	// 											key={sa.card.id}
+	// 											ability={sa.card}
+	// 											height={sa.h}
+	// 										/>
+	// 									)}
+	// 								</div>
+	// 							);
+	// 						} else {
+	// 							return (
+	// 								<AbilityCard
+	// 									key={a[0].card.id}
+	// 									ability={a[0].card}
+	// 									height={a[0].h}
+	// 								/>
+	// 							);
+	// 						}
+	// 					})}
+	// 					{refCards}
+	// 				</div>
+	// 			</Fragment>
+	// 		);
+	// 	}
+	// 	return abilityCardPages;
+	// };
 
 	static getRequiredCardPages = (extraCards: ExtraCards, character: HeroSheet, layout: CardPageLayout, idPrefix = 'extra') => {
 		const pages: JSX.Element[] = [];

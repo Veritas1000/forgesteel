@@ -1,17 +1,14 @@
+import { Cell, CellPageBase } from './cell';
 import { CardPageLayout } from '../sheet-layout';
-import { Cell } from './cell';
 import { Collections } from '@/utils/collections';
 import { HeightStackRow } from './height-stack-row';
 
-export class CellColumnPage<T> {
+export class CellColumnPage<T> extends CellPageBase<T> {
 	columns: HeightStackRow<T>;
-	h: number;
-	_layout: CardPageLayout;
 
 	constructor(layout: CardPageLayout) {
+		super(layout);
 		this.columns = new HeightStackRow<T>(layout);
-		this.h = 0;
-		this._layout = layout;
 	}
 
 	fits = (cell: Cell<T>): boolean => {
@@ -40,7 +37,9 @@ export class CellColumnPage<T> {
 			].filter(c => !!c);
 
 			const notAdded1 = this.addGroup(extremes);
-			// TODO this is incomplete
+			// TODO: this is not optimal -
+			//   if at least both of the small ones were added,
+			//   should continue trying adding smallest cells.
 			if (notAdded1.length) {
 				return cellGroup.concat(...notAdded1);
 			} else {
@@ -109,7 +108,7 @@ export class CellColumnPage<T> {
 		return notAdded;
 	};
 
-	getAllCells = (): Cell<T>[] => {
+	getCells = (): Cell<T>[] => {
 		return this.columns.stacks.flatMap(stack => stack.contents);
 	};
 }

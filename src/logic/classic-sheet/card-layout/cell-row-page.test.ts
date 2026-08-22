@@ -129,7 +129,7 @@ describe.concurrent('CellRowPage', () => {
 		});
 	});
 
-	describe.concurrent('getAllCells', () => {
+	describe.concurrent('getCells', () => {
 		test('returns all cells from all rows in L->R, T->B (book) order', () => {
 			const layout = {
 				perRow: 2,
@@ -146,7 +146,7 @@ describe.concurrent('CellRowPage', () => {
 			// result should be
 			// [ [15] [10] ]
 			// [ [10] [15] ]
-			const cells = page.getAllCells();
+			const cells = page.getCells();
 			expect(cells.length).toBe(4);
 
 			expect(cells[0].contents.length).toBe(1);
@@ -177,7 +177,7 @@ describe.concurrent('CellRowPage', () => {
 			// result should be
 			// [ [15] [10] ]
 			// [ [10] [] ]
-			const cells = page.getAllCells();
+			const cells = page.getCells();
 			expect(cells.length).toBe(3);
 
 			expect(cells[0].contents.length).toBe(1);

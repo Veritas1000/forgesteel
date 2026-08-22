@@ -214,20 +214,20 @@
         }
     }
 
-    &.fill-blank:not(#priority) .abilities {
-        .card {
-            align-self: flex-start;
-            &.notes {
-                align-self: stretch;
-            }
-        }
+    // &.fill-blank:not(#priority) .abilities {
+    //     .card {
+    //         align-self: flex-start;
+    //         &.notes {
+    //             align-self: stretch;
+    //         }
+    //     }
 
-        .stacked-cards {
-            justify-content: flex-start;
+    //     .stacked-cards {
+    //         justify-content: flex-start;
 
-            .card {
-                flex: 0;
-            }
-        }
-    }
+    //         .card {
+    //             flex: 0;
+    //         }
+    //     }
+    // }
 }
